@@ -5,6 +5,17 @@ require_once(__DIR__ . '/simple_html_dom.php');
  * iTunes Appstore Protocol class
  *
  * @author andrewzirkel (andrewzirkel [at] gmail [dot] com)
+ * 
+ * public methods:
+ * string	getError()				- gets error thrown by apple
+ * bool 	associateMD($MDInvite) 	- Associates MDInvite URL with logged in user
+ * string	createAccount($email,$pw,$q1,$a1,$q2,$a2,$q3,$a3,$by,$bd,$bm,$fn,$ln,$address,$city,$state,$zip,$phoneArea,$phone)
+ * 									- creates regular (13 and over) account from supplied info
+ * string	verifyAccount($verifyUrl,$email,$aidpw)
+ * 									- verifys email address
+ * bool createAccountEDU($url,$tpw,$q1,$a1,$q2,$a2,$q3,$a3,$phone)
+ * 									- creates EDU (12 and under) with parent url and supplied info
+ * 									- use set_callback($function_name) to register your password generator function
  */
 class iTunesAccountActions extends iTunes
 {
