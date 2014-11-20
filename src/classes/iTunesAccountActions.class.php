@@ -206,7 +206,9 @@ class iTunesAccountActions extends iTunes
 		}
 		
 		#call terms
-		$ret = $this->http_get($url);
+		$reta=array();
+		$ret = $this->http_get($url,$reta);
+		$htmldom = str_get_html($reta['body']);
 		#verify page load
 		if (!preg_match('/Connections Get Started/',$ret)) {
 			$msg='Connections Get Started page not loaded';
@@ -221,19 +223,23 @@ class iTunesAccountActions extends iTunes
 			print ($msg);
 			return($msg);
 		}else {$mzPageUUID=$m[1];}
+		
 		#get ID Details url
-		$m = array();
-		if (!preg_match('#\<form name\="f_2_1_1_1_3_0_7_11_3_7" method\="post" action\="([a-zA-Z0-9\/.]+)"\>#', $ret, $m)) {
+		$element=$htmldom->find('div[class=accept-terms]')[0]->children[0];
+		if(array_key_exists('name',$element->getAllAttributes()))
+			$url=$urlbase . $element->action;
+		else {
 			$msg='link not found';
 			print ($msg);
 			return($msg);
-		}else {$url=$urlbase . $m[1];}
-		
+		}
 		
 		#post terms & get ID Details
 		$postfields='2.1.1.1.3.0.7.11.3.7.1=2.1.1.1.3.0.7.11.3.7.1';
 		$postfields.='&mzPageUUID=' . $mzPageUUID;
-		$ret = $this->http_post($url, $postfields);
+		$reta=array();
+		$ret = $this->http_post($url, $postfields, 'application/x-www-form-urlencoded', $reta);
+		$htmldom = str_get_html($reta['body']);
 		#verify page load
 		if (!preg_match('/Edit Account/',$ret)) {
 			$msg='Edit Account page not loaded';
@@ -247,13 +253,14 @@ class iTunesAccountActions extends iTunes
 			return($msg);
 		}else {$mzPageUUID=$m[1];}
 		#get Payment url
-		$m = array();
-		if (!preg_match('#\<form name\="f_2_0_1_1_3_0_7_11_1" method\="post" action\="([a-zA-Z0-9\/.]+)"\>#', $ret, $m)) {
+		$element=$htmldom->find('form')[0];
+		if(array_key_exists('name',$element->getAllAttributes()))
+			$url=$urlbase . $element->action;
+		else {
 			$msg='link not found';
 			print ($msg);
 			return($msg);
-		}else {$url=$urlbase . $m[1];}
-		
+		}
 		
 		#post ID Details & get payment
 		$postfields='2.0.1.1.3.0.7.11.1.3.1.2.5.7.3.4.5.0=' . urlencode($email);

@@ -4,14 +4,15 @@ class spCurl
 {
 	protected function init_curl()
 	{
-		#$proxy='127.0.0.1:8888';
+		$proxy='127.0.0.1:8888';
 		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_VERBOSE, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		
+		if (isset($proxy)) {curl_setopt($ch, CURLOPT_PROXY, $proxy);}
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_USERAGENT, $this->curlopt_useragent);
+		if ($this->curlopt_useragent){curl_setopt($ch, CURLOPT_USERAGENT, $this->curlopt_useragent);}
 		if ($this->curlopt_cookiefile) {
 			curl_setopt($ch, CURLOPT_COOKIEFILE, $this->curlopt_cookiefile);
 		}
@@ -28,6 +29,10 @@ class spCurl
 		$this->curl_setopt($ch);
 		
 		$this->curl = & $ch;
+	}
+	
+	public function set_UserAgent($userAgent) {
+		curl_setopt($this->curl, CURLOPT_USERAGENT, $userAgent);
 	}
 	
 	protected function curl_setopt(&$ch) 
@@ -47,6 +52,7 @@ class spCurl
 	
 	public function __destruct()
 	{
+		//unlink($this->curlopt_cookiefile);
 		curl_close($this->curl);
 	}
 
@@ -56,7 +62,7 @@ class spCurl
 		return file_put_contents('_http_request.log', $msg."\n", FILE_APPEND);
 	}
 
-	protected function http_post($url, $data, $content_type='application/x-www-form-urlencoded')
+	public function http_post($url, $data, $content_type='application/x-www-form-urlencoded',&$reta=null)
 	{
 		$ch = & $this->curl;
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -68,15 +74,29 @@ class spCurl
 		$this->http_add_header('Content-Type', $content_type);
 POST_EXEC:
 		$v = $this->curl_exec();
+		/*
 		if (($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) != '200') {
 			$retry_count++;
 			$this->_http_log('Retry++'.$code);
 			goto POST_EXEC;
 		}
+		 */
+		if (is_array($reta)) {
+			$reta = array( 'header' => '',
+					'body' => '',
+					'curl_error' => '',
+					'http_code' => '',
+					'last_url' => '');
+			$header_size = curl_getinfo($this->curl,CURLINFO_HEADER_SIZE);
+			$reta['header'] = substr($v, 0, $header_size);
+			$reta['body'] = substr( $v, $header_size );
+			$reta['http_code'] = curl_getinfo($this -> curl,CURLINFO_HTTP_CODE);
+			$reta['last_url'] = curl_getinfo($this -> curl,CURLINFO_EFFECTIVE_URL);
+		}
 		return trim($v);
 	}
 	
-	protected function http_get($url)
+	public function http_get($url,&$reta=null)
 	{
 		$ch = & $this->curl;
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -86,12 +106,26 @@ POST_EXEC:
 		$retry_count = 0;
 GET_EXEC:
 		$v = $this->curl_exec();
+		/*
 		if (($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) != '200') {
 			$retry_count++;
 			$this->_http_log('Retry++'.$code);
 			goto GET_EXEC;
 		}
-        return trim($v);
+		 */
+		if (is_array($reta)) {
+			$reta = array( 'header' => '',
+					'body' => '',
+					'curl_error' => '',
+					'http_code' => '',
+					'last_url' => '');
+			$header_size = curl_getinfo($this->curl,CURLINFO_HEADER_SIZE);
+			$reta['header'] = substr($v, 0, $header_size);
+			$reta['body'] = substr( $v, $header_size );
+			$reta['http_code'] = curl_getinfo($this -> curl,CURLINFO_HTTP_CODE);
+			$reta['last_url'] = curl_getinfo($this -> curl,CURLINFO_EFFECTIVE_URL);
+		}
+		return trim($v);
 	}
 	
 	protected $headers = array();
