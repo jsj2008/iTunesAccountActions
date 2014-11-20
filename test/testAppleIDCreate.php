@@ -2,7 +2,7 @@
 require(__DIR__ . '/../src/classes/iTunesAccountActions.class.php');
 
 	$itunes = new iTunesAccountActions;
-	#User a fake username and passoword here.
+	#Use a fake username and passoword here.
 	$itunes->apple_id = 'username';
 	$itunes->password = 'Password';
 
@@ -33,11 +33,11 @@ require(__DIR__ . '/../src/classes/iTunesAccountActions.class.php');
 	 <option value="5">What is the name of your favorite sports team?</option></select></div>
 	 */
 	
-	$q1=;
+	$q1=0;
 	$a1='answer1';
-	$q2=;
+	$q2=0;
 	$a2='answer2';
-	$q3=;
+	$q3=0;
 	$a3='answer3';
 	
 	$fn='';
