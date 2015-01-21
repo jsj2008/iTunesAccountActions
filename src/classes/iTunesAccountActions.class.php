@@ -37,8 +37,14 @@ class iTunesAccountActions extends iTunes
 	
 	#Uses logged in user and associates with MD Invite URL
 	public function associateMD($MDInvite) {
+		$reta=array();
 		$url=$MDInvite;
-		$ret = $this->http_get($url);
+		$ret = $this->http_get($url,$reta);
+		$htmldom = str_get_html($reta['body']);
+		$formdata = array();
+		foreach ($htmldom->find('input') as $element)
+			if (array_key_exists('value',$element->getAllAttributes()))
+				$formdata[$element->name] = $element->value;
 		if (preg_match('/Your Apple ID is already associated with this VPP account/',$ret)) {
 			$this->errormsg='Your Apple ID is already associated with this VPP account';
 			print ($this->errormsg);
@@ -55,11 +61,20 @@ class iTunesAccountActions extends iTunes
 			print ($this->errormsg);
 			return(false);
 		}else {$url='https://buy.itunes.apple.com' . $m[1];}
-		if (!preg_match('#\<input id\="pageUUID" class\="optional" name\="mzPageUUID" type\="hidden" value=\'([a-zA-Z0-9\/.-]+)\' \/\>#', $ret, $m)) {
+		if (array_key_exists('mzPageUUID',$formdata))
+			$mzPageUUID = $formdata['mzPageUUID'];
+		else {
+			$this->errormsg='mzPageUUID not found';
+			print ($this->errormsg);
+			return(false);
+		}
+		/*
+		if (!preg_match('#\<input id\="pageUUID" class\="optional" name\="mzPageUUID" type\="hidden" value=\'([a-zA-Z0-9\/.-=]+)\' \/\>#', $ret, $m)) {
 			$this->errormsg='mzPageUUID not found';
 			print ($this->errormsg);
 			return(false);
 		}else {$mzPageUUID=$m[1];}
+		*/
 		$postfields='action=POST&2_1_1_1_3_0_7_11_7=2_1_1_1_3_0_7_11_7&mzPageUUID=' . $mzPageUUID;
 		$ret = $this->http_post($url, $postfields);
 		if (preg_match('/This organization can now assign apps and books to you/',$ret)) {
@@ -544,6 +559,12 @@ class iTunesAccountActions extends iTunes
 		$ret = $webRequest->http_post($url, http_build_query($post), 'application/x-www-form-urlencoded', $reta);
 		if (!preg_match('/Apple - Student/',$ret)) {
 			$this->errormsg='Register page not loaded';
+			print ($this->errormsg);
+			return(false);
+		}
+		#check if temp pw rejected
+		if (preg_match('/Your password was entered incorrectly./',$ret)) {
+			$this->errormsg="Temporary Password $tpw Rejected.";
 			print ($this->errormsg);
 			return(false);
 		}
