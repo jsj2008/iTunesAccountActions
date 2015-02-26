@@ -55,12 +55,22 @@ class iTunesAccountActions extends iTunes
 			print ($this->errormsg);
 			return(false);
 		}
+		$element=$htmldom->find('div[class=accept-terms]')[0]->children[0];
+		if(array_key_exists('name',$element->getAllAttributes()))
+			$url='https://buy.itunes.apple.com' . $element->action;
+		else {
+			$msg='link not found';
+			print ($msg);
+			return($msg);
+		}
+		/*
 		$m = array();
 		if (!preg_match('#\<form name\="f_2_1_1_1_3_0_7_11_7" method\="post" action\="([a-zA-Z0-9\/.]+)"\>#', $ret, $m)) {
 			$this->errormsg='link not found';
 			print ($this->errormsg);
 			return(false);
 		}else {$url='https://buy.itunes.apple.com' . $m[1];}
+		*/
 		if (array_key_exists('mzPageUUID',$formdata))
 			$mzPageUUID = $formdata['mzPageUUID'];
 		else {
@@ -169,6 +179,7 @@ class iTunesAccountActions extends iTunes
 		$q1 = $this->translateQuestion($q1);
 		$q2 = $this->translateQuestion($q2);
 		$q3 = $this->translateQuestion($q3);
+		$bd = $bd-1;
 		$state = $this->translateState($state);
 		$headers = array(
 											'X-Apple-Store-Front' => '143441-1,12',
@@ -202,8 +213,8 @@ class iTunesAccountActions extends iTunes
 		curl_setopt($this->curl, CURLOPT_REFERER, $url);
 		#get pod and update url
 		$m = array();
-		if (!preg_match('#set-cookie: Pod\=([0-9]+)\;#', $ret, $m)) {
-			$msg='link not found';
+		if (!preg_match('#set-cookie: itspod\=([0-9]+)\;#', $ret, $m)) {
+			$msg='pod not found';
 			print ($msg);
 			return($msg);
 		}else {$urlbase = 'https://p' . $m[1] . '-buy.itunes.apple.com';}
@@ -232,12 +243,20 @@ class iTunesAccountActions extends iTunes
 		}
 		#set referer for next call
 		curl_setopt($this->curl, CURLOPT_REFERER, $url);
+		
+		#read form data
+		$formdata = array();
+		foreach ($htmldom->find('input') as $element)
+			if (array_key_exists('value',$element->getAllAttributes()))
+				$formdata[$element->name] = $element->value;
 		#get mzPageUUID
-		if (!preg_match('#\<input id\="pageUUID" class\="optional" name\="mzPageUUID" type\="hidden" value=\'([a-zA-Z0-9\/.-]+)\' \/\>#', $ret, $m)) {
-			$msg='mzPageUUID not found';
-			print ($msg);
-			return($msg);
-		}else {$mzPageUUID=$m[1];}
+		if (array_key_exists('mzPageUUID',$formdata))
+			$mzPageUUID = $formdata['mzPageUUID'];
+		else {
+			$this->errormsg='mzPageUUID not found';
+			print ($this->errormsg);
+			return(false);
+		}
 		
 		#get ID Details url
 		$element=$htmldom->find('div[class=accept-terms]')[0]->children[0];
@@ -248,6 +267,7 @@ class iTunesAccountActions extends iTunes
 			print ($msg);
 			return($msg);
 		}
+		
 		
 		#post terms & get ID Details
 		$postfields='2.1.1.1.3.0.7.11.3.7.1=2.1.1.1.3.0.7.11.3.7.1';
@@ -261,12 +281,19 @@ class iTunesAccountActions extends iTunes
 			print ($msg);
 			return($msg);
 		}
+		#read form data
+		$formdata = array();
+		foreach ($htmldom->find('input') as $element)
+			if (array_key_exists('value',$element->getAllAttributes()))
+				$formdata[$element->name] = $element->value;
 		#get mzPageUUID
-		if (!preg_match('#\<input id\="pageUUID" class\="optional" name\="mzPageUUID" type\="hidden" value=\'([a-zA-Z0-9\/.-]+)\' \/\>#', $ret, $m)) {
-			$msg='mzPageUUID not found';
-			print ($msg);
-			return($msg);
-		}else {$mzPageUUID=$m[1];}
+		if (array_key_exists('mzPageUUID',$formdata))
+			$mzPageUUID = $formdata['mzPageUUID'];
+		else {
+			$this->errormsg='mzPageUUID not found';
+			print ($this->errormsg);
+			return(false);
+		}
 		#get Payment url
 		$element=$htmldom->find('form')[0];
 		if(array_key_exists('name',$element->getAllAttributes()))
@@ -295,7 +322,7 @@ class iTunesAccountActions extends iTunes
 		$postfields.='&mzPageUUID=' . $mzPageUUID;
 		$postfields.='&machineGUID=';
 		$postfields.='&xAppleActionSignature=';
-		$ret = $this->http_post($url, $postfields);
+		$ret = $this->http_post($url, $postfields, 'application/x-www-form-urlencoded', $reta);
 
 		#check for problems:
 		if (preg_match('/A more complex password is required/',$ret)) {
@@ -329,12 +356,19 @@ class iTunesAccountActions extends iTunes
 			print ($msg);
 			return($msg);
 		}
+		#read form data
+		$formdata = array();
+		foreach ($htmldom->find('input') as $element)
+			if (array_key_exists('value',$element->getAllAttributes()))
+				$formdata[$element->name] = $element->value;
 		#get mzPageUUID
-		if (!preg_match('#\<input id\="pageUUID" class\="optional" name\="mzPageUUID" type\="hidden" value=\'([a-zA-Z0-9\/.-]+)\' \/\>#', $ret, $m)) {
-			$msg='mzPageUUID not found';
-			print ($msg);
-			return($msg);
-		}else {$mzPageUUID=$m[1];}
+		if (array_key_exists('mzPageUUID',$formdata))
+			$mzPageUUID = $formdata['mzPageUUID'];
+		else {
+			$this->errormsg='mzPageUUID not found';
+			print ($this->errormsg);
+			return(false);
+		}
 		#get Payment post url
 		$m = array();
 		if (!preg_match('#\<form name\="f_2_0_1_1_3_0_7_11_3" method\="post" action\="([a-zA-Z0-9\/.]+)"\>#', $ret, $m)) {
